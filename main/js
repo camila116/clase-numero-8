@@ -1,0 +1,46 @@
+const listaCarrito = document.querySelector("#lista-carrito");
+const totalCarrito = document.querySelector("#total-carrito");
+
+// Si todavía no hay datos guardados, empezamos con un array vacío.
+let carrito = JSON.parse(localStorage.getItem("carrito")) ?? [];
+
+function guardarYMostrar() {
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  listaCarrito.innerHTML = carrito.length === 0
+    ? "<li>El carrito está vacío</li>"
+    : carrito.map(({ id, nombre, precio, cantidad }) => `
+        <li>
+          ${nombre} - $${precio} x ${cantidad}
+          <button class="eliminar" data-id="${id}">Quitar</button>
+        </li>
+      `).join("");
+
+  totalCarrito.textContent = carrito
+    .reduce((total, { precio, cantidad }) => total + precio * cantidad, 0);
+}
+
+document.querySelectorAll(".agregar").forEach((boton) => {
+  boton.addEventListener("click", () => {
+    const { id, nombre, precio } = boton.dataset;
+    const productoExistente = carrito.find((producto) => producto.id === id);
+
+    productoExistente
+      ? productoExistente.cantidad++
+      : carrito.push({ id, nombre, precio: Number(precio), cantidad: 1 });
+
+    guardarYMostrar();
+  });
+});
+
+listaCarrito.addEventListener("click", (evento) => {
+  const id = evento.target.closest(".eliminar")?.dataset.id;
+
+  if (id) {
+    carrito = carrito.filter((producto) => producto.id !== id);
+    guardarYMostrar();
+  }
+});
+
+// Muestra los productos guardados al abrir o refrescar la página.
+guardarYMostrar();
